@@ -123,7 +123,6 @@ def run_sweep(tokenizer, model, initial_df, sweep_eval_df, layers_to_sweep, head
         sweep_results_summary = log
     best_result = {"accuracy": -1.0, "layer": -1, "head": -1, "details": None}
     original_alpha = args.alpha
-    print(sweep_eval_df.correct.values)
 
     for layer_idx in layers_to_sweep:
         heads_for_this_layer = heads_to_sweep_map.get(layer_idx, range(model.config.num_attention_heads))

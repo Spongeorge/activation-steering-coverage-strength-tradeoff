@@ -40,12 +40,10 @@ def evaluate(
                 stopping_criteria=stopping_criteria,
                 output_hidden_states= True,
                 output_scores=True,
-                #output_attentions=True,
             )
             s = generation_output.sequences[0]
             
     output = tokenizer.decode(s)
-    #print(output)
 
     return output, generation_output
 
@@ -64,8 +62,7 @@ def evaluate_batch(
     except StopIteration:
         raise ValueError("The model has no parameters. Ensure the model is properly initialized.")
     
-    #print(device)
-    #model = model.module
+
     
     # Tokenize all prompts in the batch
     inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True,  add_special_tokens=False)
@@ -89,177 +86,6 @@ def evaluate_batch(
     outputs = tokenizer.batch_decode(generation_output.sequences, skip_special_tokens=False)
 
     return outputs, generation_output
-
-# def run_llama(args, tokenizer, model, dataset):
-
-#     MAX_NEW_TOKENS = 600
-#     generation_args = {"max_new_tokens":MAX_NEW_TOKENS,
-#                 "do_sample": True, 
-#                 "num_beams" : 1, 
-#                 "num_return_sequences" : 1, 
-#                 "temperature": args.temperature, #0.8,# 0.8, 
-#                 "top_p": 0.95,
-#                 }
-#                 #"min_new_tokens": 32, 
-#                 #"begin_suppress_tokens": [tokenizer.eos_token_id], 
-#                 #"no_repeat_ngram_size": 12, 
-            
-#     results = []
-#     counter = 0 
-
-#     for row in tqdm(dataset.iterrows()):
-#     #for row in tqdm(df.iterrows()):
-        
-#         prompt = prepare_prompt(row[1].prompt, tokenizer, args.dataset_name, args.prompt_type)
-        
-#         #prompt = row[1].prompt
-#         #
-#         if args.dataset_name != "requirements_data" and args.prompt_type == "ab":
-#             prompt = prompt+ " ("
-
-#         #if counter == 30: 
-#         #    break
-
-#         #print("Manual evaluation")
-#         output = evaluate(
-#         prompt,
-#         model = model,
-#         tokenizer = tokenizer,
-#         stopping_criteria = None,
-#         device = 'cuda',
-#         **generation_args, 
-#         )
-
-#         #scores= torch.softmax(output[1].scores[-1],1)
-#         #score = round(torch.max(scores).item(),2)#.item()
-#         output = parse_output(output[0], prompt, tokenizer)
-
-#         #### --> 
-#         id_column = "req_id" if args.dataset_name == "requirements_data" else "data_id"
-#         final_answer, predict = extract_final_answer_dataset(output, cot=True, internal_cot=False, dataset=args.dataset_name)
-#         if args.dataset_name != "requirements_data" and args.prompt_type != "open_ended":
-#             final_answer, predict = extract_final_answer_dataset(output, cot=True, internal_cot=False, dataset=args.dataset_name)
-#             gt = row[1]['gt']
-#             gt = gt.strip()
-#             correct = gt == predict
-#             results.append({id_column: row[1][id_column], "prompt": prompt, "output": output, "final_answer": final_answer,"gt": gt, "predict": correct})#, "score": score, "entropy":entropy_norm }),
-        
-#         elif args.dataset_name == "requirements_data":
-#             final_answer, predict = extract_final_answer_dataset(output, cot=True, internal_cot=False, dataset=args.dataset_name)
-#             results.append({id_column: row[1][id_column], "prompt": prompt, "output": output, "final_answer": final_answer, "predict": predict})#, "score": score, "entropy":entropy_norm  }),
-        
-#         else: 
-#             results.append({id_column: row[1][id_column], "question": row[1]['question'], "prompt": prompt, "output": output, "answer": output})#, "score": score, "entropy":entropy_norm  }),
-        
-#         counter += 1
-#     return results 
-
-# def run_llama_intervention(args, tokenizer, model, interventions, dataset):
-#     print("Running LLM with interventions")
-#     num_heads = 32
-
-#     def lt_modulated_vector_add(head_output, layer_name, start_edit_location='lt'):#, add_proj_val_std = args.add_proj_val_std ): 
-
-#             head_output = rearrange(head_output, 'b s (h d) -> b s h d', h=num_heads)
-#             for head, direction, proj_val_std in interventions[layer_name]:
-#                 #print(head)
-#                 #print(direction)
-#                 direction_to_add = torch.tensor(direction).to(head_output.device.index)
-                
-#                 if start_edit_location == 'lt': 
-#                     head_output[:, -1, head, :] += args.alpha * proj_val_std * direction_to_add  
-                    
-#                 else: 
-#                     head_output[:, start_edit_location:, head, :] += args.alpha * proj_val_std * direction_to_add
-            
-#             head_output = rearrange(head_output, 'b s h d -> b s (h d)')
-#             return head_output
-    
-#     def lt_modulated_vector_no_alpha(head_output, layer_name, start_edit_location='lt'): 
-            
-#         head_output = rearrange(head_output, 'b s (h d) -> b s h d', h=num_heads)
-#         for head, direction, proj_val_std in interventions[layer_name]:
-#             #print(head)
-#             #print(direction)
-#             direction_to_add = torch.tensor(direction).to(head_output.device.index)
-#             #print(direction_to_add)
-#             if start_edit_location == 'lt': 
-        
-#                 head_output[:, -1, head, :] += proj_val_std * direction_to_add
-                
-#             else: 
-
-#                 head_output[:, start_edit_location:, head, :] +=  proj_val_std * direction_to_add
-        
-#         head_output = rearrange(head_output, 'b s h d -> b s (h d)')
-#         return head_output
-    
-#     MAX_NEW_TOKENS = 600
-#     generation_args = {"max_new_tokens":MAX_NEW_TOKENS,
-#                 "do_sample": True, 
-#                 "num_beams" : 1, 
-#                 "num_return_sequences" : 1, 
-#                 "temperature": args.temperature, #0.8,# 0.8, 
-#                 "top_p": 0.95,
-#                 #"min_new_tokens": 32, 
-#                 #"begin_suppress_tokens": [tokenizer.eos_token_id], 
-#                 }
-#             #"no_repeat_ngram_size": 12, 
-            
-    
-#     results = []
-#     counter = 0 
-
-#     for row in tqdm(dataset.iterrows()):
-#     #for row in tqdm(df.iterrows()):
-        
-#         #print(row[1].prompt)
-#         if "<|eot_id|>" not in row[1].prompt:
-            
-#             #print("prepare_prompt")
-#             prompt = prepare_prompt(row[1].prompt, tokenizer, args.dataset_name, args.prompt_type)
-#         else:    
-#             prompt = row[1].prompt
-        
-#         #
-#         if args.dataset_name != "requirements_data" and args.prompt_type == "ab":
-#             prompt = prompt+ " ("
-        
-#         output = eval_intervention(
-#             prompt,
-#             model=model,
-#             tokenizer=tokenizer,
-#             stopping_criteria=None,
-#             device='cuda',
-#             interventions=interventions,
-#             intervention_fn= lt_modulated_vector_add if args.add_or_subtract else lt_modulated_vector_no_alpha,
-#             # intervention_fn=lt_modulated_vector_add,  # or lt_modulated_vector_subtract
-#             **generation_args,
-#         )
-            
-#         scores= torch.softmax(output[1].scores[-1],1)
-#         score = round(torch.max(scores).item(),2)#.item()
-#         output = parse_output(output[0], prompt, tokenizer)
-
-#         id_column = "req_id" if args.dataset_name == "requirements_data" else "data_id"
-#         final_answer, predict = extract_final_answer_dataset(output, cot=True, internal_cot=False, dataset=args.dataset_name)
-#         if args.dataset_name != "requirements_data" and args.prompt_type != "open_ended":
-#             final_answer, predict = extract_final_answer_dataset(output, cot=True, internal_cot=False, dataset=args.dataset_name)
-#             gt = row[1]['gt']
-#             gt = gt.strip()
-#             correct = gt == predict
-#             results.append({id_column: row[1][id_column], "prompt": prompt, "output": output, "final_answer": final_answer,"gt": gt, "predict": correct, "score": score, }),
-        
-#         elif args.dataset_name == "requirements_data":
-#             final_answer, predict = extract_final_answer_dataset(output, cot=True, internal_cot=False, dataset=args.dataset_name)
-#             results.append({id_column: row[1][id_column], "prompt": prompt, "output": output, "final_answer": final_answer, "predict": predict, "score": score }),
-        
-#         else: 
-#             results.append({id_column: row[1][id_column], "question": row[1]['question'], "prompt": prompt, "output": output, "answer": output, "score": score }),
-        
-
-#     return results 
-
 def eval_intervention_batch(
     prompts,
     args,
@@ -278,17 +104,12 @@ def eval_intervention_batch(
         raise ValueError("The model has no parameters. Ensure the model is properly initialized.")
     
 
-    #print("Printing from eval_intervention_batch")
-    #print(intervention_fn)
-    #print(device)
-    #model = model.module
     
     # Tokenize all prompts in the batch
     inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True,  add_special_tokens=False)
     
     input_ids = inputs["input_ids"].to(device)
     attention_mask = inputs["attention_mask"].to(device)
-    #print(attention_mask)
 
     generation_config = GenerationConfig(**kwargs)
 
@@ -710,7 +531,6 @@ def run_llama_intervention_batch_parallel(args, tokenizer, model, interventions,
     for rank, result in results.items():
         
         overall_results.extend(result["local_results"])
-    #print(overall_results)
     return overall_results
 
 
