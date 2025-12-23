@@ -388,7 +388,7 @@ def evaluate_configuration_requirements(args, tokenizer, model, heads, alphas, e
             else:
                 results = run_llama_intervention_batch_parallel(args, tokenizer, model, interventions, test_set)
             
-            print(results)
+            #print(results) Commented out to avoid spam
             curr_fold_results = pd.DataFrame(results)
 
             # Calculate precision and recall
