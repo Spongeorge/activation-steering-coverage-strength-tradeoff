@@ -114,7 +114,7 @@ def get_directions(model, df, args=None, id_column = "data_id", column = "activa
     com_directions = get_com_directions(num_layers, num_heads, train_set_idxs, val_set_idxs, separated_activations, separated_labels)
     return com_directions, separated_activations
 
-def run_sweep(tokenizer, model, sweep_eval_df, layers_to_sweep, heads_to_sweep_map, log, args):
+def run_sweep(tokenizer, model, initial_df, sweep_eval_df, layers_to_sweep, heads_to_sweep_map, log, args):
     
     print("Starting attention head sweep...")
     if log == None: 
@@ -132,7 +132,7 @@ def run_sweep(tokenizer, model, sweep_eval_df, layers_to_sweep, heads_to_sweep_m
             heads = [(layer_idx, head_idx)]
             alphas = [args.alpha]
            
-            results_raw = evaluate_configuration_general(args, tokenizer, model, heads, alphas, sweep_eval_df, external_test_set=sweep_eval_df.iloc[:])
+            results_raw = evaluate_configuration_general(args, tokenizer, model, heads, alphas, initial_df, external_test_set=sweep_eval_df.iloc[:])
 
             if args.prompt_type == "ab_cot":
 
@@ -699,7 +699,7 @@ def main():
             heads_to_sweep_map = {}
 
             
-        best_head_sweep_result, sweep_summary_list = run_sweep(tokenizer, model, initial_df, layers_to_sweep, heads_to_sweep_map, configurations, args) # ,
+        best_head_sweep_result, sweep_summary_list = run_sweep(tokenizer, model, initial_df, final_eval_df, layers_to_sweep, heads_to_sweep_map, configurations, args)
         for i in sweep_summary_list:
             i['accuracy'] = i['metrics']['accuracy']
 
