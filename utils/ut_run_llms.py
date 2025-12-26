@@ -186,7 +186,7 @@ def run_llama_intervention_batch(args, tokenizer, model, interventions, interven
         **generation_args, 
         )
 
-        print("Output: ", output[0])
+        #print("Output: ", output[0])
         # Extract scores (logits) for each generated token
         #logits = torch.stack(output[1].scores, dim=1)  # (batch_size, seq_length, vocab_size)
         # Apply softmax to logits to get probabilities

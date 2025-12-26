@@ -286,7 +286,7 @@ def flattened_idx_to_layer_head(flattened_idx, num_heads):
 def layer_head_to_flattened_idx(layer, head, num_heads):
     return layer * num_heads + head
 
-def prepare_prompt(prompt, tokenizer, dataset_name=None, verbose= False, suffix=""):
+def prepare_prompt(prompt, tokenizer, dataset_name=None, verbose=False, suffix=""):
     if dataset_name == "requirements_data":
         chat_dict = [
             {"role": "user", "content": prompt},
