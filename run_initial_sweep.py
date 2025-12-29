@@ -149,6 +149,7 @@ def run_sweep(tokenizer, model, initial_df, sweep_eval_df, layers_to_sweep, head
                     "alphas": [float(alpha) for alpha in alphas],
                     "seeds": args.seed,
                     "metrics": metrics,
+                    "accuracy": accuracy,
                     "total": len(results_raw),
                     "consistency_factor": args.consistency_factor,
                 }
