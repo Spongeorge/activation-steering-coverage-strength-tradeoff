@@ -391,38 +391,18 @@ def run_topk_combined_evaluation(
     
     for k in top_ks:
 
-        i=0
-        for _, row in ranked.iterrows():
-            
-            i+=1
-            heads  = row["heads"]          # e.g. [(9, 3), (10, 5)]
-            print(heads)
-            alphas = row["alphas"]         # e.g. [0.7, 0.6]
-            if len(heads) != len(alphas):
-                raise ValueError("Heads and alphas length differ.")
+        heads = [ast.literal_eval(head_string)[0] for head_string in sweep_summary.sort_values(by = 'accuracy', ascending=False)['heads'][:k]]
 
-            for h, a in zip(heads, alphas):
-                if h not in combined:      # keep only the first (best) α per head
-                    combined[h] = a
-                    #if len(combined) == k: # stop after k distinct heads
-                    #    break
-            if i == k: 
-                break
-
-        combined_heads  = list(combined.keys())
-        combined_alphas = list(combined.values())
-        
-
-        
+        assert len(heads) == k
         
         for a in alpha_values:
-            print(f"Top {k} unique heads: {combined_heads}, with alpha {a}")
+            print(f"Top {k} unique heads: {heads}, with alpha {a}")
             # 4. Run the evaluation
-            alphas = [a for alpha in combined_alphas]
+            alphas = [a for alpha in heads]
 
             results_raw = evaluate_configuration_general(
                 args, tokenizer, model,
-                combined_heads, alphas,
+                heads, alphas,
                 sweep_df,
                 external_test_set=eval_df
             )
@@ -445,10 +425,10 @@ def run_topk_combined_evaluation(
                 log_filename = "sweep_configuration.csv"
 
                 log_entry = {
-                "heads": combined_heads,
+                "heads": heads,
                 "alphas": [float(alpha) for alpha in alphas],
                 "seeds": args.seed,
-                "metrics": metrics,
+                "accuracy": float(accuracy),
                 "total": len(results_raw),
                 "consistency_factor": args.consistency_factor,
                     }
@@ -468,7 +448,7 @@ def run_topk_combined_evaluation(
             
 
             summary = {
-                "heads": combined_heads,
+                "heads": heads,
                 "accuracy": accuracy,
                 "total_eval_examples": len(results_raw),
                 "raw_results": results_raw,
